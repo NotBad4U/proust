@@ -1,7 +1,7 @@
 use parser::request::{RequestMessage,RequestPayload};
 use responses::response::{ResponseMessage,ResponsePayload};
 use responses::metadata::{MetadataResponse,Broker,TopicMetadata,PartitionMetadata};
-
+use responses::heartbeat::HeartbeatResponse;
 
 pub fn handle_request(req: RequestMessage) -> Result<ResponseMessage,u8> {
     match req.request_payload {
@@ -33,7 +33,15 @@ pub fn handle_request(req: RequestMessage) -> Result<ResponseMessage,u8> {
             correlation_id: req.correlation_id,
             response_payload: ResponsePayload::ProduceResponse(vec![( "topic1", vec![(0, 0, 1337)])])
         })
-      }
+      },
+      RequestPayload::HeartbeatRequest(r) => {
+        Ok(ResponseMessage {
+          correlation_id: req.correlation_id,
+          response_payload: ResponsePayload::HeartbeatResponse(HeartbeatResponse {
+            error_code: 0,
+          })
+        })
+      },
       _ => Err(0)
     }
 }
