@@ -15,6 +15,7 @@ use parser::metadata::*;
 use parser::offset_commit::*;
 use parser::offset_fetch::*;
 use parser::consumer_metadata::*;
+use parser::heartbeat::*;
 
 #[derive(PartialEq,Debug)]
 pub struct RequestMessage<'a> {
@@ -33,7 +34,8 @@ pub enum RequestPayload<'a> {
     MetadataRequest(TopicMetadataRequest<'a>),
     OffsetCommitRequest(OffsetCommitRequest<'a>),
     OffsetFetchRequest(OffsetFetchRequest<'a>),
-    ConsumerMetadataRequest(ConsumerMetadataRequest<'a>)
+    ConsumerMetadataRequest(ConsumerMetadataRequest<'a>),
+    HeartbeatRequest(HeartbeatRequest<'a>),
 }
 
 pub fn parse_request_payload<'a>(input:&'a [u8], api_version: i16, api_key: i16) -> IResult<&'a [u8], RequestPayload<'a>> {
@@ -60,7 +62,7 @@ pub fn parse_request_payload<'a>(input:&'a [u8], api_version: i16, api_key: i16)
         // Not documented, but those exist in the code
         // Given proust topology, implementing all of them may not be necessary
         11 => Error(ErrorKind::Custom(InputError::NotImplemented.to_int())), // JoinGroup
-        12 => Error(ErrorKind::Custom(InputError::NotImplemented.to_int())), // Heartbeat
+        12 => map!(input, heartbeat_request, |p| { RequestPayload::HeartbeatRequest(p) }), // Heartbeat
 
         _  => Error(ErrorKind::Custom(InputError::ParserError.to_int()))
     }
